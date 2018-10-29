@@ -88,9 +88,8 @@ public class ChessBoard {
 		// change color one by one
 		int i = x1 + dx;
 		int j = y1 + dy;
-		int color = board[x1][y1];
 		while (i != x2 || j != y2) {
-			board[i][j] = color;
+			board[i][j] = player;
 			i += dx;
 			j += dy;
 		}
@@ -144,11 +143,10 @@ public class ChessBoard {
 
 	// Search the current user color along the direction of dx, dy
 	private boolean search(int x, int y, int dx, int dy) {
-		int color = player;
 		int i = x + dx;
 		int j = y + dy;
 		while (judge(i, j)) {
-			if (board[i][j] == color) {
+			if (board[i][j] == player) {
 				xf = i;
 				yf = j;
 				// If it is adjacent
@@ -183,7 +181,6 @@ public class ChessBoard {
 		}
 		cur -= 1;
 		board[x][y] = player;
-		iflock = false;
 		for (int i = -1; i < 2; i++) {
 			for (int j = -1; j < 2; j++) {
 				if (i == 0 && j == 0) {
@@ -194,10 +191,10 @@ public class ChessBoard {
 				}
 			}
 		}
-		player = player == -1 ? 1 : -1;
+		player  *= -1;
 		// If you can’t act, it’s still moved by the original user.
 		if (!ifaction()) {
-			player = player == -1 ? 1 : -1;
+			player *= -1;
 			if (!ifaction()) {
 				iflock = true;
 			}

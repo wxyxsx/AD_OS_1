@@ -11,6 +11,8 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 
 public class GameUI extends JFrame implements MouseListener, MouseMotionListener {
+	// 动态调整UI大小
+	// 先调整棋盘逻辑
 	private static final long serialVersionUID = 1L;
 	private ChessBoard test;
 	int x, y;// Mouse coordinates
@@ -67,32 +69,33 @@ public class GameUI extends JFrame implements MouseListener, MouseMotionListener
 
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if (test.Check()) {
-			x = e.getX();
-			y = e.getY();
-			if (x >= 20 && x <= 420 && y >= 40 && y <= 440) {
-				x = (x - 20) / 50;
-				y = (y - 40) / 50;
-				if (!test.PlaceChess(x, y)) {
-					JOptionPane.showMessageDialog(this, "棋子必须放在能提子的位置！");
-					return;
-				}
-				if (test.GetPlayer() == 1) {
-					this.setTitle("白棋行动");
+		x = e.getX();
+		y = e.getY();
+		if (x >= 20 && x <= 420 && y >= 40 && y <= 440) {
+			x = (x - 20) / 50;
+			y = (y - 40) / 50;
+			if (!test.PlaceChess(x, y)) {
+				JOptionPane.showMessageDialog(this, "棋子必须放在能提子的位置！");
+				return;
+			}
+			if (test.GetPlayer() == 1) {
+				this.setTitle("白棋行动");
+			} else {
+				this.setTitle("黑棋行动");
+			}
+			this.repaint();
+			// Check if the game is over
+			// 大不了先标记一下
+			if (!test.Check()) {
+				int i = test.GetBlack();
+				int j = test.GetWhite();
+				String str = String.format("黑棋%d个，白棋%d个\n", i, j);
+				if (i > j) {
+					JOptionPane.showMessageDialog(this, str + "游戏结束，黑方胜利");
+				} else if (i < j) {
+					JOptionPane.showMessageDialog(this, str + "游戏结束，白方胜利");
 				} else {
-					this.setTitle("黑棋行动");
-				}
-				this.repaint();
-				// Check if the game is over
-				if (!test.Check()) {
-					int i = test.GetBlack();
-					int j = test.GetWhite();
-					String str = String.format("黑棋%d个，白棋%d个\n", i, j);
-					if (i > j) {
-						JOptionPane.showMessageDialog(this, str + "游戏结束，黑方胜利");
-					} else {
-						JOptionPane.showMessageDialog(this, str + "游戏结束，白方胜利");
-					}
+					JOptionPane.showMessageDialog(this, str + "游戏结束，平局");
 				}
 			}
 		}
@@ -135,8 +138,8 @@ public class GameUI extends JFrame implements MouseListener, MouseMotionListener
 
 	}
 
-	public static void main(String[] args) {
-		new GameUI();
-	}
+//	public static void main(String[] args) {
+//		new GameUI();
+//	}
 
 }
