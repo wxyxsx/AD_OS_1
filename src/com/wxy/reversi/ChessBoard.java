@@ -2,13 +2,12 @@ package com.wxy.reversi;
 
 public class ChessBoard {
 	private static final int SCALE = 8; // must be even number
-	private int board[][] = new int[SCALE][SCALE]; // checkerboard
-	// 0 space 1 white -1 black
+	private int board[][] = new int[SCALE][SCALE]; // 0 space 1 white -1 black
 	private int cur; // current number of space
 	private int xf, yf; // searching result
 	private int player; // current player
 	private int white, black; // count the number of piece
-	private boolean iflock; // check for deadlock
+	private boolean iflock; // check for deadlock | Mark whether the game starts
 
 	// white first default
 	public ChessBoard() {
@@ -20,13 +19,17 @@ public class ChessBoard {
 		Reset(o);
 	}
 
+	public void Start() {
+		iflock = false;
+	}
+
 	// reset the game state
 	public void Reset(int s) {
 		cur = SCALE * SCALE - 4;
 		player = s;
 		white = 0;
 		black = 0;
-		iflock = false;
+		iflock = true;
 		for (int i = 0; i < SCALE; i++) {
 			for (int j = 0; j < SCALE; j++) {
 				board[i][j] = 0;
@@ -191,7 +194,7 @@ public class ChessBoard {
 				}
 			}
 		}
-		player  *= -1;
+		player *= -1;
 		// If you can’t act, it’s still moved by the original user.
 		if (!ifaction()) {
 			player *= -1;
