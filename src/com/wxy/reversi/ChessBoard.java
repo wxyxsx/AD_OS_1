@@ -18,7 +18,11 @@ public class ChessBoard {
 	public ChessBoard(int o) {
 		Reset(o);
 	}
-
+	
+	public void SetPlayer(int o) {
+		player = o;
+	}
+	
 	public void Start() {
 		iflock = false;
 	}
