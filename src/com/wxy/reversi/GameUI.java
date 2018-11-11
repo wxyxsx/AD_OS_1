@@ -1,55 +1,51 @@
 package com.wxy.reversi;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
-
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
+
 public class GameUI extends Application {
+    // 懒得改了，代码写得太烂
+    // todo 分离client，鼠标落在可下的位置时改变棋盘颜色
     public ChessBoard reversi;
     private Pane pchess;
     private StackPane ppaint;
-    // Used by the function 'repaint()' to operate the board
+    // 用户函数repaint()，在上面画棋盘和棋子
     private Socket skt;
     private DataInputStream input;
     private DataOutputStream output;
 
     private int xo, yo;
     private boolean waiting;
+    // 用于等待用户下棋
     private int curplayer;
-    // waiting for the use input
 
     private TextField Tplayer, Twhite, Tblack, Taddr, Tport;
     private Button start, reset;
     private TextArea Message;
 
+    private Stage stage;
+
     @Override
     public void start(Stage primaryStage) {
-        reversi = new ChessBoard(); //?
+        stage = primaryStage;
+
+        reversi = new ChessBoard();
         waiting = true;
         curplayer = 0;
 
@@ -62,13 +58,13 @@ public class GameUI extends Application {
             if (!reversi.Check() || reversi.GetPlayer() != curplayer) {
                 return;
             }
-            // if game is over / not my turn
+            // 如果游戏结束或者不是我的回合则点击棋盘没用
             int x = (int) e.getX();
             int y = (int) e.getY();
             if (x >= 0 && x <= 400 && y >= 0 && y <= 400) {
                 x = x / 50;
                 y = y / 50;
-                // return 1 meaning effective input
+                // 返回1证明坐标验证有效
                 if (PressChess(x, y) == 1) {
                     waiting = false;
                     xo = x;
@@ -80,8 +76,8 @@ public class GameUI extends Application {
         Tplayer = new TextField("白棋");
         Twhite = new TextField("2");
         Tblack = new TextField("2");
-        Taddr = new TextField();
-        Tport = new TextField();
+        Taddr = new TextField("localhost");
+        Tport = new TextField("8000");
         Tplayer.setPrefColumnCount(4);
         Tplayer.setEditable(false);
         Twhite.setPrefColumnCount(4);
@@ -122,7 +118,13 @@ public class GameUI extends Application {
                 Message.appendText("游戏尚未结束，不能重启游戏\n");
                 return;
             }
-            reversi.Reset(0);
+            try {
+                skt.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            reversi.Reset(1);
+            primaryStage.setTitle("黑白棋");
             curplayer = 0;
             repaint();
             try {
@@ -169,6 +171,7 @@ public class GameUI extends Application {
 
     private int PressChess(int x, int y) {
         if (!reversi.PlaceChess(x, y)) {
+            Message.appendText("不能下在当前位置\n");
             return 0;
         }
         repaint();
@@ -214,6 +217,7 @@ public class GameUI extends Application {
                 if (p == 1) {
                     curplayer = 1;
                     Platform.runLater(() -> {
+                        stage.setTitle("用户1：白棋");
                         Message.appendText("连接成功，等待另一用户\n");
                     });
                     input.readInt();
@@ -223,19 +227,20 @@ public class GameUI extends Application {
                 } else if (p == -1) {
                     curplayer = -1;
                     Platform.runLater(() -> {
+                        stage.setTitle("用户2：黑棋");
                         Message.appendText("连接成功，等待玩家1开始\n");
                     });
                 }
                 reversi.Start();
                 while (reversi.Check()) {
                     if (reversi.GetPlayer() == curplayer) {
-                        // move the chess only on your turn
+                        // 只有在我的回合才能移动棋子(发送坐标)
                         waitForPlayerAction();
                         sendMove();
                     }
                     //todo add lock on value xo,yo
                     if (reversi.GetPlayer() != curplayer) {
-                        // waiting for info from other if not on your turn
+                        // 只要是对方的回合就要一直等待坐标
                         receiveInfoFromServer();
                     }
                 }
@@ -248,7 +253,7 @@ public class GameUI extends Application {
     }
 
     private void waitForPlayerAction() throws InterruptedException {
-        // waiting for you
+        // 等待当前用户下棋
         while (waiting) {
             Thread.sleep(100);
         }
@@ -273,7 +278,7 @@ public class GameUI extends Application {
     }
 
     class LinePane extends Pane {
-        // draw board
+        // 画棋盘
         public LinePane() {
             Rectangle r = new Rectangle(0, 0, 400, 400);
             r.setStroke(Color.BLACK);
@@ -290,7 +295,7 @@ public class GameUI extends Application {
     }
 
     class ChessPane extends Pane {
-        // draw chess
+        // 画棋子
         public ChessPane() {
             for (int i = 0; i < 8; i++) {
                 for (int j = 0; j < 8; j++) {
